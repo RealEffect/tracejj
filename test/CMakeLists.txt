@@ -1,0 +1,21 @@
+
+find_package(GTest QUIET)
+if (GTest_FOUND)
+    message(STATUS "tracepp: GTest ${GTest_VERSION} in \"${GTest_DIR}\"")
+else()
+    message(WARNING "tracepp: Testing will not generate, not found GTest.")
+    return()
+endif()
+
+file(GLOB_RECURSE TEST_SRC_FILES "*.cpp")
+foreach(_SRC_FILE ${TEST_SRC_FILES})
+    get_filename_component(_NAME ${_SRC_FILE} NAME_WE)
+    add_executable(${_NAME} ${_SRC_FILE})
+    source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${_SRC_FILE})
+    target_include_directories(${_NAME} PRIVATE ${TRACEPP_ROOT}/src)
+    target_link_libraries(${_NAME} PRIVATE GTest::gmock_main tracepp)
+    set_property(TARGET ${_NAME} PROPERTY FOLDER "Testing")
+    unset(_NAME)
+endforeach()
+
+unset(TEST_SRC_FILES CACHE)
