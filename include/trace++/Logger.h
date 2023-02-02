@@ -29,7 +29,7 @@ public:
     virtual void SetPrint2Stdout(bool enable) = 0;
     virtual void SetPrint2DebugWindow(bool enable) = 0;
     virtual void SetPrintObserver(Observer* pObserver) = 0;
-    [[nodiscard]]  virtual LogLevel MaxLevel() const = 0;
+    [[nodiscard]] virtual LogLevel MaxLevel() const = 0;
 
 public:
     virtual void Print(LogLevel level, const char* strMessage) = 0;
