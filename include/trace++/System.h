@@ -1,9 +1,9 @@
 ﻿#pragma once
 
-#include "trace++/TraceDefine.h"
+#include "trace++/LibDefine.h"
 #include <stdint.h>
 
-namespace tracepp
+namespace tracejj
 {
 /// char type of path
 #ifdef _WIN32
@@ -14,4 +14,4 @@ typedef char pchar_t;
 
 TRACE_API uint32_t CurrentThreadNumber();
 TRACE_API int CurrentProcessNumber();
-}  // namespace tracepp
+}  // namespace tracejj

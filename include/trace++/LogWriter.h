@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <cstddef>
 
-#include "trace++/TraceDefine.h"
+#include "trace++/LibDefine.h"
 #include "trace++/System.h"
 
 // see syslog level
@@ -25,7 +25,7 @@ class LogWriter
 public:
     struct Param
     {
-        const tracepp::pchar_t* strLogDir = nullptr;
+        const tracejj::pchar_t* strLogDir = nullptr;
         uint32_t uMaxLogFileSize = 0U;  // MiB
         uint32_t uMaxLogStorage = 0U;   // MiB
     };

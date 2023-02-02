@@ -147,7 +147,7 @@ int LogFileWriter::OpenLogFile(const path_string& strDir)
             // 可以兼容多进程，同时防止日志文件名冲突。
             // 加入文件名防冲突编号，1-512，兼容在短时间内（1秒内）大量日志输出导致文件滚动引起的文
             // 件名冲突。
-            pathLogFile.append(fmt::format("{:%Y%m%d-%H%M%S}.{}.log", tick, tracepp::CurrentProcessNumber()));
+            pathLogFile.append(fmt::format("{:%Y%m%d-%H%M%S}.{}.log", tick, tracejj::CurrentProcessNumber()));
             int nFileHandle = -1;
             for (int i = 1; i <= 512 && m_bLogging; ++i)
             {
@@ -159,7 +159,7 @@ int LogFileWriter::OpenLogFile(const path_string& strDir)
 #endif
                 if (err == EEXIST)
                 {
-                    pathLogFile.replace_filename(fmt::format("{:%Y%m%d-%H%M%S}#{}.{}.log", tick, i, tracepp::CurrentProcessNumber()));
+                    pathLogFile.replace_filename(fmt::format("{:%Y%m%d-%H%M%S}#{}.{}.log", tick, i, tracejj::CurrentProcessNumber()));
                 }
                 else
                 {

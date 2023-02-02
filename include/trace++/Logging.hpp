@@ -39,7 +39,7 @@ inline std::string SetupLogMessageHeader(LogLevel level, const std::string& strM
     auto tickNow = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count() / 1000000.0;
     auto timeNow = std::chrono::system_clock::now();
     auto timeNowFreq = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow.time_since_epoch()).count() % 1000;
-    return fmt::format("{}.{:03} [{}@{:.6f}]<{}>: {}", timeNow, timeNowFreq, tracepp::CurrentThreadNumber(), tickNow, level, strMessage);
+    return fmt::format("{}.{:03} [{}@{:.6f}]<{}>: {}", timeNow, timeNowFreq, tracejj::CurrentThreadNumber(), tickNow, level, strMessage);
 }
 
 template <typename... Args>

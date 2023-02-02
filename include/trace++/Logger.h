@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "trace++/LogWriter.h"
-#include "trace++/TraceDefine.h"
+#include "trace++/LibDefine.h"
 
 class Logger
 {

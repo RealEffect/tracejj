@@ -15,7 +15,7 @@
 #define FORCE_INLINE __attribute__((__always_inline__))
 #endif
 
-namespace tracepp
+namespace tracejj
 {
 
 uint32_t ThisThreadId()
@@ -62,4 +62,4 @@ int CurrentProcessNumber()
     return s_nProcessNumber;
 }
 
-}  // namespace tracepp
+}  // namespace tracejj
