@@ -6,14 +6,14 @@
 #endif
 
 // todo, thread safe! leak!
-namespace tracepp_logger_impl_internal
+namespace tracejj_logger_impl_internal
 {
 static LoggerImpl* s_pInstance = new LoggerImpl();
 }
 
 Logger& Logger::Instance()
 {
-    using namespace tracepp_logger_impl_internal;
+    using namespace tracejj_logger_impl_internal;
     return *s_pInstance;
 }
 

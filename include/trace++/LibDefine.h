@@ -1,10 +1,10 @@
 ﻿#pragma once
 
-#ifdef TRACEPP_BUILD_FOR_SHARED
+#ifdef TRACEJJ_BUILD_FOR_SHARED
 #if __GNUC__ >= 4
 #define TRACE_API __attribute__((visibility("default")))
 #elif defined(_MSC_VER)
-#if defined(tracepp_EXPORTS)
+#if defined(tracejj_EXPORTS)
 #define TRACE_API __declspec(dllexport)
 #else
 #define TRACE_API __declspec(dllimport)

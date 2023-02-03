@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS On)
 
-project(tracepp VERSION 0.0.9 DESCRIPTION "A c++ trace library.")
+project(tracejj VERSION 0.0.9 DESCRIPTION "A c++ logging library.")
 
 set(CMAKE_CXX_STANDARD 17) #-stdc++17
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -14,11 +14,11 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 endif(MSVC)
 
-set(TRACEPP_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
-if (NOT DEFINED TRACEPP_MASTER_PROJECT)
-    set(TRACEPP_MASTER_PROJECT OFF)
+set(TRACEJJ_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+if (NOT DEFINED TRACEJJ_MASTER_PROJECT)
+    set(TRACEJJ_MASTER_PROJECT OFF)
     if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-        set(TRACEPP_MASTER_PROJECT ON)
+        set(TRACEJJ_MASTER_PROJECT ON)
     endif ()
 endif()
 
@@ -36,17 +36,17 @@ set(PRODUCT_PUBLISHER "" CACHE STRING "Product publisher name. This is part of t
 
 # ---
 # config all library and test
-file(GLOB_RECURSE TRACEPP_HEADER_FILES "include/*.h" "include/*.hpp")
+file(GLOB_RECURSE TRACEJJ_HEADER_FILES "include/*.h" "include/*.hpp")
 file(GLOB_RECURSE SRC_FILES "include/*.h" "include/*.hpp" "src/*.h" "src/*.cpp")
 add_library(${PROJECT_NAME} ${SRC_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRC_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${TRACEPP_HEADER_FILES}")
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${TRACEJJ_HEADER_FILES}")
 if (BUILD_SHARED_LIBS OR BUILD_FRAMEWORK)
-    message(STATUS "tracepp: Build as shared/FRAMEWORK library.")
-    target_compile_definitions(${PROJECT_NAME} PUBLIC TRACEPP_BUILD_FOR_SHARED)
+    message(STATUS "tracejj: Build as shared/FRAMEWORK library.")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC TRACEJJ_BUILD_FOR_SHARED)
     set_target_properties(
         ${PROJECT_NAME} PROPERTIES
         FRAMEWORK TRUE
@@ -58,9 +58,9 @@ if (USE_GHC_FILESYSTEM)
     target_compile_definitions(${PROJECT_NAME} PRIVATE USE_GHC_FILESYSTEM)
     find_package(ghc_filesystem 9.0 QUIET)
     if (ghc_filesystem_FOUND)
-        message(STATUS "tracepp: Found ghc_filesystem ${ghc_filesystem_VERSION} in \"${ghc_filesystem_DIR}\".")
+        message(STATUS "tracejj: Found ghc_filesystem ${ghc_filesystem_VERSION} in \"${ghc_filesystem_DIR}\".")
     else()
-        message(STATUS "tracepp: Use built-in filesystem, not found ghc_filesystem in CMAKE_PREFIX_PATH(\"${CMAKE_PREFIX_PATH}\").")
+        message(STATUS "tracejj: Use built-in filesystem, not found ghc_filesystem in CMAKE_PREFIX_PATH(\"${CMAKE_PREFIX_PATH}\").")
         add_subdirectory(third/filesystem)
     endif()
     target_link_libraries(${PROJECT_NAME} PRIVATE ghc_filesystem)
@@ -71,18 +71,18 @@ endif()
 
 find_package(fmt 9.0 QUIET)
 if (fmt_FOUND)
-    message(STATUS "tracepp: Found libfmt ${fmt_VERSION} in \"${fmt_DIR}\".")
+    message(STATUS "tracejj: Found libfmt ${fmt_VERSION} in \"${fmt_DIR}\".")
 else()
-    message(STATUS "tracepp: Use built-in libfmt, not found libfmt in CMAKE_PREFIX_PATH(\"${CMAKE_PREFIX_PATH}\").")
+    message(STATUS "tracejj: Use built-in libfmt, not found libfmt in CMAKE_PREFIX_PATH(\"${CMAKE_PREFIX_PATH}\").")
     add_subdirectory(third/fmt)
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt)
 
-if (BUILD_TESTING AND TRACEPP_MASTER_PROJECT)
+if (BUILD_TESTING AND TRACEJJ_MASTER_PROJECT)
     add_subdirectory(test)
 endif()
 
-if (TRACEPP_MASTER_PROJECT)
+if (TRACEJJ_MASTER_PROJECT)
     install(
         TARGETS ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}Targets
