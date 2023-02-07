@@ -33,7 +33,7 @@ LoggerImpl::~LoggerImpl()
 
 bool LoggerImpl::SetWriter(uint32_t uMod, LogWriter* pWriter)
 {
-    if (uMod > static_cast<uint32_t>(m_arrWriter.size()))
+    if (uMod >= static_cast<uint32_t>(m_arrWriter.size()))
     {
         return false;
     }
@@ -123,7 +123,7 @@ void LoggerImpl::Print(LogLevel level, const std::string_view& strMessage) const
 
 void LoggerImpl::Write(LogLevel level, uint32_t uMod, const std::string_view& strMessage)
 {
-    if (uMod > static_cast<uint32_t>(m_arrWriter.size()))
+    if (uMod >= static_cast<uint32_t>(m_arrWriter.size()))
     {
         return;
     }
