@@ -42,10 +42,10 @@ public:
 
 public:
     bool Write(LogLevel level, const char* strMsg, size_t szMsgLength) override;
-    void Close() override;
 
 private:
     void Start(const path_string& strDir);
+    void Stop();
     int OpenLogFile(const path_string& strDir);
     void LoopWrite(path_string strDir);
     void PruneLogStorage(bool& bBreak, const path_string& strDir);

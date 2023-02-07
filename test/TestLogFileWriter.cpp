@@ -5,7 +5,7 @@
 #include "log/LogFileWriter.h"
 #include "system/Path.h"
 
-TEST(Log, LogFileWriter)
+TEST(LogFileWriter, Message)
 {
     auto pathLog = GetLogsPath();
     pathLog.append("log");
@@ -18,16 +18,16 @@ TEST(Log, LogFileWriter)
         }
     }
 
-    LogFileWriter writer;
+    std::unique_ptr<LogFileWriter> pWriter(new LogFileWriter);
     constexpr std::string_view strMessage1("This is test message\r\n");
-    ASSERT_FALSE(writer.Write(LogLevel::WARN, nullptr, 0));
-    ASSERT_FALSE(writer.Write(LogLevel::WARN, nullptr, strMessage1.size()));
-    ASSERT_FALSE(writer.Write(LogLevel::WARN, strMessage1.data(), 0));
+    ASSERT_FALSE(pWriter->Write(LogLevel::WARN, nullptr, 0));
+    ASSERT_FALSE(pWriter->Write(LogLevel::WARN, nullptr, strMessage1.size()));
+    ASSERT_FALSE(pWriter->Write(LogLevel::WARN, strMessage1.data(), 0));
     for (int i = 0; i < 1024; ++i)
     {
-        ASSERT_TRUE(writer.Write(LogLevel::WARN, strMessage1.data(), strMessage1.size()));
+        ASSERT_TRUE(pWriter->Write(LogLevel::WARN, strMessage1.data(), strMessage1.size()));
     }
-    writer.Close();
+    pWriter = nullptr;
     for (auto& entry : fs::directory_iterator(pathLog, err))
     {
         if (entry.is_regular_file(err) && entry.path().extension().compare(".log") == 0)

@@ -39,5 +39,4 @@ public:
 
 public:
     virtual bool Write(LogLevel level, const char* strMsg, size_t szMsgLength) = 0;
-    virtual void Close() = 0;
 };

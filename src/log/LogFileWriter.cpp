@@ -63,7 +63,7 @@ LogFileWriter::LogFileWriter(const LogWriter::Param* pParam)
 
 LogFileWriter::~LogFileWriter()
 {
-    LogFileWriter::Close();
+    Stop();
 }
 
 bool LogFileWriter::Write(LogLevel level, const char* strMsg, size_t szMsgLength)
@@ -92,7 +92,7 @@ bool LogFileWriter::Write(LogLevel level, const char* strMsg, size_t szMsgLength
     }
 }
 
-void LogFileWriter::Close()
+void LogFileWriter::Stop()
 {
     if (m_thWrite.joinable())
     {
