@@ -22,7 +22,7 @@ TEST(Sytem, CurrentProcessNumber)
     const auto f = std::async(
         [number = tracejj::CurrentProcessNumber()]()
         {
-            ASSERT_NE(number, tracejj::CurrentProcessNumber());
+            ASSERT_EQ(number, tracejj::CurrentProcessNumber());
             ASSERT_EQ(tracejj::CurrentProcessNumber(), tracejj::CurrentProcessNumber());
         });
     f.wait();
