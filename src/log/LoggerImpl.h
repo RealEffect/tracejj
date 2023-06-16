@@ -5,10 +5,12 @@
 #include <shared_mutex>
 #include <string>
 
+#ifndef MAX_LOG_MODS
+#define MAX_LOG_MODS (16)
+#endif
+
 class LoggerImpl : public Logger
 {
-    friend class Logger;
-
 public:
     LoggerImpl();
     LoggerImpl(const LoggerImpl&) noexcept = delete;
@@ -42,6 +44,6 @@ private:
     bool m_enablePrint2Stdout;
     bool m_enablePrint2DebugWindow;
     std::shared_mutex m_mtxWriter;
-    std::array<LogWriter*, 16> m_arrWriter;
+    std::array<LogWriter*, MAX_LOG_MODS> m_arrWriter;
     Observer* m_pPrintObserver;
 };

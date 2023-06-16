@@ -37,8 +37,15 @@ bool LoggerImpl::SetWriter(uint32_t uMod, LogWriter* pWriter)
     {
         return false;
     }
-    std::lock_guard<std::shared_mutex> lock(m_mtxWriter);
-    m_arrWriter[uMod] = pWriter;
+    if constexpr (MAX_LOG_MODS > 1)
+    {
+        std::lock_guard<std::shared_mutex> lock(m_mtxWriter);
+        m_arrWriter[uMod] = pWriter;
+    }
+    else
+    {
+        m_arrWriter[uMod] = pWriter;
+    }
     return true;
 }
 
@@ -127,10 +134,20 @@ void LoggerImpl::Write(LogLevel level, uint32_t uMod, const std::string_view& st
     {
         return;
     }
-    std::shared_lock<std::shared_mutex> lock(m_mtxWriter);
-    if (m_arrWriter[uMod] != nullptr)
+    if constexpr (MAX_LOG_MODS > 1)
     {
-        m_arrWriter[uMod]->Write(level, strMessage.data(), strMessage.size());
+        std::shared_lock<std::shared_mutex> lock(m_mtxWriter);
+        if (m_arrWriter[uMod] != nullptr)
+        {
+            m_arrWriter[uMod]->Write(level, strMessage.data(), strMessage.size());
+        }
+        else
+        {
+            if (m_arrWriter[0] != nullptr)
+            {
+                m_arrWriter[0]->Write(level, strMessage.data(), strMessage.size());
+            }
+        }
     }
     else
     {

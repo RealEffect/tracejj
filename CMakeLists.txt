@@ -33,6 +33,7 @@ else()
 endif()
 
 set(PRODUCT_PUBLISHER "" CACHE STRING "Product publisher name. This is part of the log path.")
+set(BUILD_MAX_LOG_MODS 16 CACHE STRING "Maximum of logging module number.")
 
 # ---
 # config all library and test
@@ -52,6 +53,11 @@ if (BUILD_SHARED_LIBS OR BUILD_FRAMEWORK)
         FRAMEWORK TRUE
         FRAMEWORK_VERSION A
     )
+endif()
+
+if (BUILD_MAX_LOG_MODS)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC MAX_LOG_MODS=${BUILD_MAX_LOG_MODS})
+    message(STATUS "Maximum of logging module number is ${BUILD_MAX_LOG_MODS}.")
 endif()
 
 if (USE_GHC_FILESYSTEM)
