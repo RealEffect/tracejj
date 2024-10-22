@@ -142,7 +142,7 @@ int LogFileWriter::OpenLogFile(const path_string& strDir)
         fs::path pathLogFile(strDir);
         if (fs::is_directory(pathLogFile) || fs::create_directories(pathLogFile))
         {
-            auto tick = std::chrono::system_clock::now();
+            const auto tick = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now());
             // log file name: <base name>.<system time>[#<conflict number>].<pid>.log
             // conflict number: 1 - 512
             // 日志文件名包含创建时间和进程号，参考glog，创建时间便于通过文件名筛选时间段，进程号
