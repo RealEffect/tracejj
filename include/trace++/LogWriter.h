@@ -4,20 +4,21 @@
 #include <cstddef>
 
 #include "trace++/LibDefine.h"
-#include "trace++/System.h"
 
+namespace tracejj
+{
 // see syslog level
 enum class LogLevel : uint32_t
 {
-    FATAL = 0U,  // or Name it 'Emergency'
-    ALERT = 1U,
-    CRIT = 2U,
-    FAULT = 3U,  // or Name it 'Error'
-    WARN = 4U,
-    NOTICE = 5U,
-    INFO = 6U,
-    DEBUG = 7U,  // or Name it 'Verbose'
-    MAX = 0xFFFFU,
+    FATAL = 0u,  // or Name it 'Emergency'
+    ALERT = 1u,
+    CRIT = 2u,
+    FAULT = 3u,  // or Name it 'Error'
+    WARN = 4u,
+    NOTICE = 5u,
+    INFO = 6u,
+    DEBUG = 7u,  // or Name it 'Verbose'
+    MAX = 0xFFFFu,
 };
 
 class LogWriter
@@ -26,8 +27,8 @@ public:
     struct Param
     {
         const tracejj::pchar_t* strLogDir = nullptr;
-        uint32_t uMaxLogFileSize = 0U;  // MiB
-        uint32_t uMaxLogStorage = 0U;   // MiB
+        uint32_t uMaxLogFileSize = 0u;  // MiB
+        uint32_t uMaxLogStorage = 0u;   // MiB
     };
 
 public:
@@ -40,3 +41,4 @@ public:
 public:
     virtual bool Write(LogLevel level, const char* strMsg, size_t szMsgLength) = 0;
 };
+}  // namespace tracejj

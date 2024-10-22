@@ -24,12 +24,11 @@ endif()
 
 # ---
 # option list
-option(BUILD_TESTING "Add testing on build tree, and need GTest." ON)
-option(BUILD_FRAMEWORK "Build as FRAMEWORK on Apple macOS or iOS." OFF)
-if (WIN32)
-    option(USE_GHC_FILESYSTEM "Use gulrak/filesystem replace c++17/std::filesystem." OFF)
-else()
-    option(USE_GHC_FILESYSTEM "Use gulrak/filesystem replace c++17/std::filesystem." ON) # std::filesystem introduced in macOS10.15 GCC8.X
+option(TRACEJJ_BUILD_TESTING "Add testing on build tree, and need GTest." ${TRACEJJ_MASTER_PROJECT})
+option(TRACEJJ_BUILD_SHARD "Build as shared library." OFF)
+option(USE_GHC_FILESYSTEM "Use gulrak/filesystem replace c++17/std::filesystem." OFF)
+if (APPLE)
+    option(TRACEJJ_BUILD_FRAMEWORK "Build as FRAMEWORK on Apple platform." OFF)
 endif()
 
 set(PRODUCT_PUBLISHER "" CACHE STRING "Product publisher name. This is part of the log path.")
@@ -39,15 +38,16 @@ set(BUILD_MAX_LOG_MODS 16 CACHE STRING "Maximum of logging module number.")
 # config all library and test
 file(GLOB_RECURSE TRACEJJ_HEADER_FILES "include/*.h" "include/*.hpp")
 file(GLOB_RECURSE SRC_FILES "include/*.h" "include/*.hpp" "src/*.h" "src/*.cpp")
-add_library(${PROJECT_NAME} ${SRC_FILES})
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRC_FILES})
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${TRACEJJ_HEADER_FILES}")
-if (BUILD_SHARED_LIBS OR BUILD_FRAMEWORK)
-    message(STATUS "tracejj: Build as shared/FRAMEWORK library.")
+if (BUILD_SHARED_LIBS OR TRACEJJ_BUILD_SHARD)
+    message(STATUS "tracejj: Build as shared library, BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} TRACEJJ_BUILD_SHARD=${TRACEJJ_BUILD_SHARD}.")
+    add_library(${PROJECT_NAME} SHARED ${SRC_FILES})
     target_compile_definitions(${PROJECT_NAME} PUBLIC TRACEJJ_BUILD_FOR_SHARED)
+else()
+    add_library(${PROJECT_NAME} ${SRC_FILES})
+endif()
+
+if (APPLE AND TRACEJJ_BUILD_FRAMEWORK)
     set_target_properties(
         ${PROJECT_NAME} PROPERTIES
         FRAMEWORK TRUE
@@ -55,48 +55,58 @@ if (BUILD_SHARED_LIBS OR BUILD_FRAMEWORK)
     )
 endif()
 
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRC_FILES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${TRACEJJ_HEADER_FILES}")
+
 if (BUILD_MAX_LOG_MODS)
     target_compile_definitions(${PROJECT_NAME} PUBLIC MAX_LOG_MODS=${BUILD_MAX_LOG_MODS})
     message(STATUS "Maximum of logging module number is ${BUILD_MAX_LOG_MODS}.")
 endif()
 
 if (USE_GHC_FILESYSTEM)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_GHC_FILESYSTEM)
-    find_package(ghc_filesystem 9.0 QUIET)
-    if (ghc_filesystem_FOUND)
-        message(STATUS "tracejj: Found ghc_filesystem ${ghc_filesystem_VERSION} in \"${ghc_filesystem_DIR}\".")
-    else()
-        message(STATUS "tracejj: Use built-in filesystem, not found ghc_filesystem in CMAKE_PREFIX_PATH(\"${CMAKE_PREFIX_PATH}\").")
-        add_subdirectory(third/filesystem)
+    if (NOT TARGET ghc_filesystem)
+        find_package(ghc_filesystem QUIET)
+        if (ghc_filesystem_FOUND)
+            message(STATUS "tracejj: Found ghc_filesystem ${ghc_filesystem_VERSION} in \"${ghc_filesystem_DIR}\".")
+        else()
+            message(STATUS "tracejj: Use built-in filesystem, not found ghc_filesystem in CMAKE_PREFIX_PATH(\"${CMAKE_PREFIX_PATH}\").")
+            add_subdirectory(third/filesystem)
+        endif()
     endif()
-    target_link_libraries(${PROJECT_NAME} PRIVATE ghc_filesystem)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ghc_filesystem)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_GHC_FILESYSTEM)
 endif()
 if (PRODUCT_PUBLISHER)
     target_compile_definitions(${PROJECT_NAME} PRIVATE PRODUCT_PUBLISHER="${PRODUCT_PUBLISHER}")
 endif()
 
-find_package(fmt 9.0 QUIET)
-if (fmt_FOUND)
-    message(STATUS "tracejj: Found libfmt ${fmt_VERSION} in \"${fmt_DIR}\".")
-else()
-    message(STATUS "tracejj: Use built-in libfmt, not found libfmt in CMAKE_PREFIX_PATH(\"${CMAKE_PREFIX_PATH}\").")
-    add_subdirectory(third/fmt)
+if (NOT TARGET fmt::fmt)
+    find_package(fmt 9.0 QUIET)
+    if (fmt_FOUND)
+        message(STATUS "tracejj: Found libfmt ${fmt_VERSION} in \"${fmt_DIR}\".")
+    else()
+        message(STATUS "tracejj: Use built-in libfmt, not found libfmt in CMAKE_PREFIX_PATH(\"${CMAKE_PREFIX_PATH}\").")
+        add_subdirectory(third/fmt)
+    endif()
 endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt)
 
-if (BUILD_TESTING AND TRACEJJ_MASTER_PROJECT)
-    add_subdirectory(test)
-endif()
-
 if (TRACEJJ_MASTER_PROJECT)
+    if (TRACEJJ_BUILD_TESTING)
+        add_subdirectory(test)
+    endif()
+    add_executable(example "example.cpp")
+    target_link_libraries(example tracejj)
     install(
-        TARGETS ${PROJECT_NAME}
-        EXPORT ${PROJECT_NAME}Targets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/trace++
-        PUBLIC_HEADER DESTINATION /trace++
-        FRAMEWORK DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    )
+            TARGETS ${PROJECT_NAME}
+            EXPORT ${PROJECT_NAME}Targets
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+            INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/trace++
+            PUBLIC_HEADER DESTINATION /trace++
+            FRAMEWORK DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        )
 endif()

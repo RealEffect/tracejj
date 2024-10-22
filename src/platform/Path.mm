@@ -1,4 +1,4 @@
-﻿#import "trace/system/Path.h"
+﻿#import "Path.h"
 #import <Foundation/Foundation.h>
 
 fs::path GetExecutablePath()
@@ -13,7 +13,7 @@ fs::path GetExecutablePath()
     return pathExecutable;
 }
 
-fs::path GetLogsPath()
+fs::path GetDefaultLogPath()
 {
     fs::path pathLog;
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);

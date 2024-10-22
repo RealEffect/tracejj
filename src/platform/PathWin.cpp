@@ -1,9 +1,10 @@
 ﻿#ifdef _WIN32
+
+#include "Path.h"
+#include <array>
 #include <Windows.h>
 #include <UserEnv.h>
 #include <Shlobj.h>
-#include <array>
-#include "system/Path.h"
 
 fs::path GetExecutablePath()
 {
@@ -12,7 +13,7 @@ fs::path GetExecutablePath()
     return fs::path(strExeFileName.data());
 }
 
-fs::path GetLogsPath()
+fs::path GetDefaultLogPath()
 {
     fs::path pathLog;
     if (pathLog.empty())

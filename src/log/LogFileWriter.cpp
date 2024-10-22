@@ -1,6 +1,5 @@
-﻿#include "log/LogFileWriter.h"
-#include "trace++/System.h"
-#include "system/Path.h"
+﻿#include "LogFileWriter.h"
+#include "platform/System.h"
 #include <fmt/format.h>
 #include <fmt/chrono.h>
 #include <future>
@@ -15,12 +14,15 @@
 #include <unistd.h>
 #endif
 #include <fcntl.h>
+#include <errno.h>
 
 #define DEFAULT_MAX_FILE_SIZE (16ull * 1024u * 1024u)  // 16MB
 #define FLAG_LOG_FLUSH (0x00000001)
 #define FLAG_LOG_EOF (0x00000002)
-#define CHECK_FLAG(flags, mark) ((flags & mark) == mark)
+#define CHECK_FLAG(flags, mark) (((flags) & (mark)) == (mark))
 
+namespace tracejj
+{
 constexpr size_t kWriteCacheSize = 2ULL * 1024ULL;
 
 //////////////////////////////////////////////////////////////////////////
@@ -119,7 +121,7 @@ void LogFileWriter::Start(const path_string& strDir)
     fs::path pathLog(strDir);
     if (pathLog.empty())
     {
-        pathLog = GetLogsPath();
+        pathLog = GetDefaultLogPath();
         pathLog.append("log");
     }
     std::error_code ec;
@@ -147,19 +149,19 @@ int LogFileWriter::OpenLogFile(const path_string& strDir)
             // 可以兼容多进程，同时防止日志文件名冲突。
             // 加入文件名防冲突编号，1-512，兼容在短时间内（1秒内）大量日志输出导致文件滚动引起的文
             // 件名冲突。
-            pathLogFile.append(fmt::format("{:%Y%m%d-%H%M%S}.{}.log", tick, tracejj::CurrentProcessNumber()));
+            pathLogFile.append(fmt::format("{:%Y%m%d-%H%M%S}.{}.log", tick, CurrentProcessNumber()));
             int nFileHandle = -1;
             for (int i = 1; i <= 512 && m_bLogging; ++i)
             {
 #ifdef _WIN32
                 const auto err = _wsopen_s(&nFileHandle, pathLogFile.c_str(), O_CREAT | O_EXCL | O_BINARY | O_RDWR, SH_DENYNO, S_IWRITE | S_IREAD);
 #else
-                nFileHandle == open(pathLogFile.c_str(), O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
+                nFileHandle = open(pathLogFile.c_str(), O_CREAT | O_EXCL | O_RDWR, S_IRUSR | S_IWUSR);
                 const auto err = nFileHandle;
 #endif
                 if (err == EEXIST)
                 {
-                    pathLogFile.replace_filename(fmt::format("{:%Y%m%d-%H%M%S}#{}.{}.log", tick, i, tracejj::CurrentProcessNumber()));
+                    pathLogFile.replace_filename(fmt::format("{:%Y%m%d-%H%M%S}#{}.{}.log", tick, i, CurrentProcessNumber()));
                 }
                 else
                 {
@@ -176,7 +178,7 @@ int LogFileWriter::OpenLogFile(const path_string& strDir)
     return -1;
 }
 
-void LogFileWriter::LoopWrite(path_string strDir)
+void LogFileWriter::LoopWrite(const path_string& strDir)
 {
     bool bPruning = false;
     bool bEof = false;
@@ -195,24 +197,53 @@ void LogFileWriter::LoopWrite(path_string strDir)
                     m_cvWriteEvent.wait_for(lock, std::chrono::seconds(1),
                                             [&]() -> bool
                                             {
-                                                return !m_bLogging || m_buffer.flags != 0U;
+                                                return !m_bLogging || m_buffer.flags != 0u;
                                             });
                 }
                 else
                 {
-                    const auto b = m_buffer.data.Peek();
-                    write(nLogFileHandle, b.pSlice0, b.uSlice0Bytes);
-                    szWriteBytesToFile += b.uSlice0Bytes;
-                    if (b.uSlice1Bytes > 0U)
+                    auto b = m_buffer.data.Peek();
+                    auto w = ::write(nLogFileHandle, b.pSlice0, static_cast<unsigned int>(b.szSlice0));
+                    if (w < 0)
                     {
-                        write(nLogFileHandle, b.pSlice1, b.uSlice1Bytes);
-                        szWriteBytesToFile += b.uSlice1Bytes;
+                        bEof = true;
+                        break;
                     }
+                    if (static_cast<size_t>(w) < b.szSlice0)
+                    {
+                        b.szSlice0 = static_cast<size_t>(w);
+                        b.szSlice1 = 0;
+                    }
+                    else
+                    {
+                        if (b.szSlice1 > 0U)
+                        {
+                            w = ::write(nLogFileHandle, b.pSlice1, static_cast<unsigned int>(b.szSlice1));
+                            if (w < 0)
+                            {
+                                b.szSlice1 = 0;
+                                m_buffer.data.Readed(b);
+                                bEof = true;
+                                break;
+                            }
+                            if (static_cast<size_t>(w) < b.szSlice1)
+                            {
+                                b.szSlice1 = static_cast<size_t>(w);
+                            }
+                        }
+                    }
+                    szWriteBytesToFile += b.szSlice0;
+                    szWriteBytesToFile += b.szSlice1;
                     m_buffer.data.Readed(b);
                     if (m_buffer.loss > 0)
                     {
-                        std::string strLoss = fmt::format("\n!!!!Log Loss {} Block.\n", m_buffer.loss.exchange(0U));
-                        write(nLogFileHandle, strLoss.c_str(), static_cast<unsigned int>(strLoss.length()));
+                        std::string strLoss = fmt::format("\n!!!!Log Loss {} Block.\n", m_buffer.loss.exchange(0u));
+                        w = ::write(nLogFileHandle, strLoss.c_str(), static_cast<unsigned int>(strLoss.length()));
+                        if (w < 0)
+                        {
+                            bEof = true;
+                            break;
+                        }
                         szWriteBytesToFile += strLoss.length();
                     }
                     if (CHECK_FLAG(m_buffer.flags, FLAG_LOG_EOF))
@@ -220,7 +251,7 @@ void LogFileWriter::LoopWrite(path_string strDir)
                         bEof = true;
                         break;
                     }
-                    m_buffer.flags = 0U;
+                    m_buffer.flags = 0u;
                     if (szWriteBytesToFile >= m_uMaxLogFileSize)
                     {
                         if (!bPruning)
@@ -238,7 +269,7 @@ void LogFileWriter::LoopWrite(path_string strDir)
                     }
                 }
             }
-            close(nLogFileHandle);
+            ::close(nLogFileHandle);
         }
         else
         {
@@ -302,3 +333,4 @@ void LogFileWriter::PruneLogStorage(bool& bBreak, const path_string& strDir)
         }
     }
 }
+}  // namespace tracejj

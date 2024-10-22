@@ -1,6 +1,6 @@
 ﻿#include <gtest/gtest.h>
 #include <future>
-#include "system/Path.h"
+#include "platform/Path.h"
 
 TEST(Sytem, GetExecutablePath)
 {
@@ -9,5 +9,5 @@ TEST(Sytem, GetExecutablePath)
 
 TEST(Sytem, GetLogsPath)
 {
-    ASSERT_FALSE(GetLogsPath().empty());
+    ASSERT_FALSE(GetDefaultLogPath().empty());
 }

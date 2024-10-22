@@ -1,12 +1,20 @@
-﻿#include "trace++/System.h"
+﻿#include "System.h"
 
 #ifdef _WIN32
 #include <Windows.h>
 #include <process.h>
-#define getpid _getpid
 #else
 #include <unistd.h>
 #include <pthread.h>
+#define _getpid getpid
+#endif
+
+#ifdef __linux__
+#include <sys/syscall.h>
+#ifndef SYS_gettid
+#error "SYS_gettid unavailable on this system"
+#endif
+#define gettid() ((pid_t)syscall(SYS_gettid))
 #endif
 
 #if defined(_MSC_VER)
@@ -24,9 +32,8 @@ uint32_t ThisThreadId()
     return ::GetCurrentThreadId();
 #elif defined(__APPLE__)
     return pthread_mach_thread_np(pthread_self());
-#elif defined(__linux__)
-    return pthread_self();
 #else
+    return gettid();
     // todo(other OS)
 #endif
 }
@@ -58,7 +65,7 @@ uint32_t CurrentThreadNumber()
 
 int CurrentProcessNumber()
 {
-    static const int s_nProcessNumber = getpid();
+    static const int s_nProcessNumber = _getpid();
     return s_nProcessNumber;
 }
 

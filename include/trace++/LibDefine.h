@@ -15,3 +15,13 @@
 #else
 #define TRACE_API
 #endif
+
+namespace tracejj
+{
+/// char type of path
+#ifdef _WIN32
+typedef wchar_t pchar_t;
+#else
+typedef char pchar_t;
+#endif
+}  // namespace tracejj

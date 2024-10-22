@@ -1,70 +1,72 @@
-﻿#include "buffer/MultiWriteRingBuffer.h"
+﻿#include "MultiWriteRingBuffer.h"
 #include <cstring>
 
-MultiWriteRingBuffer::MultiWriteRingBuffer(uint32_t uBytes)
-    : m_pData(new int8_t[uBytes])
-    , m_uCapOfBytes(uBytes)
-    , m_uBeginIndex(0U)
-    , m_uEndIndex(0U)
-    , m_uDataOfBytes(0U)
+namespace tracejj
+{
+
+MultiWriteRingBuffer::MultiWriteRingBuffer(size_t szBytes)
+    : m_pData(new int8_t[szBytes])
+    , m_szCapOfBytes(szBytes)
+    , m_uBeginIndex(0u)
+    , m_uWriteableIndex(0u)
+    , m_uEndIndex(0u)
+    , m_uDataOfBytes(0u)
 {
 }
 
 MultiWriteRingBuffer::~MultiWriteRingBuffer()
 {
-    m_uCapOfBytes = 0;
+    m_szCapOfBytes = 0;
     delete[] m_pData;
     m_pData = nullptr;
 }
 
-bool MultiWriteRingBuffer::Write(const int8_t* pData, uint32_t uBytes)
+bool MultiWriteRingBuffer::Write(const int8_t* pData, size_t szBytes)
 {
-    if (m_pData == nullptr || (m_uCapOfBytes - m_uDataOfBytes.load()) < uBytes)
+    if (m_pData == nullptr || (m_szCapOfBytes - m_uDataOfBytes.load()) < szBytes)
     {
         return false;
     }
-    if (pData == nullptr || uBytes == 0U)
+    if (pData == nullptr || szBytes == 0U)
     {
         return true;
     }
-    auto uEndIndex = m_uEndIndex.load();
-    uint32_t uWriteableIndex = m_uWriteableIndex.load();
-    auto uNewWriteableIndex = uWriteableIndex;
+    size_t uWriteableIndex = m_uWriteableIndex.load();
+    size_t uNewWriteableIndex = 0u;
     while (true)
     {
-        uNewWriteableIndex = uWriteableIndex + uBytes;
-        while (uNewWriteableIndex >= m_uCapOfBytes)
+        uNewWriteableIndex = uWriteableIndex + szBytes;
+        while (uNewWriteableIndex >= m_szCapOfBytes)
         {
-            uNewWriteableIndex -= m_uCapOfBytes;
+            uNewWriteableIndex -= m_szCapOfBytes;
         }
         if (m_uWriteableIndex.compare_exchange_strong(uWriteableIndex, uNewWriteableIndex))
         {
             break;
         }
-        if ((m_uCapOfBytes - m_uDataOfBytes.load()) < uBytes)
+        if ((m_szCapOfBytes - m_uDataOfBytes.load()) < szBytes)
         {
             return false;
         }
     }
     auto pWriteBuffer = m_pData + uWriteableIndex;
-    if (uWriteableIndex + uBytes <= m_uCapOfBytes)
+    if ((szBytes + uWriteableIndex) <= m_szCapOfBytes)
     {
-        memcpy(pWriteBuffer, pData, uBytes);
+        memcpy(pWriteBuffer, pData, szBytes);
     }
     else
     {
-        const uint32_t uSilce0Bytes = m_uCapOfBytes - uWriteableIndex;
-        memcpy(pWriteBuffer, pData, uSilce0Bytes);
-        pData += uSilce0Bytes;
-        // pWriteBuffer = m_pData;
-        memcpy(m_pData, pData, uBytes - uSilce0Bytes);
+        const size_t szSilce0Bytes = m_szCapOfBytes - uWriteableIndex;
+        memcpy(pWriteBuffer, pData, szSilce0Bytes);
+        pData += szSilce0Bytes;
+        memcpy(m_pData, pData, szBytes - szSilce0Bytes);
     }
     while (true)
     {
         if (uWriteableIndex == m_uEndIndex.load())
         {
             m_uEndIndex.store(uNewWriteableIndex);
-            m_uDataOfBytes += uBytes;
+            m_uDataOfBytes += static_cast<uint32_t>(szBytes);
             break;
         }
     }
@@ -75,18 +77,18 @@ MultiWriteRingBuffer::Block MultiWriteRingBuffer::Peek() const
 {
     // Single thread
     MultiWriteRingBuffer::Block b;
-    const uint32_t uBytes = m_uDataOfBytes;
-    const uint32_t uBeginIndex = m_uBeginIndex;
-    b.pSlice0 = m_pData + uBeginIndex;
-    if ((uBeginIndex + uBytes) <= m_uCapOfBytes)
+    const size_t szBytes = m_uDataOfBytes;
+    const size_t szBeginIndex = m_uBeginIndex;
+    b.pSlice0 = m_pData + szBeginIndex;
+    if ((szBeginIndex + szBytes) <= m_szCapOfBytes)
     {
-        b.uSlice0Bytes = uBytes;
+        b.szSlice0 = szBytes;
     }
     else
     {
-        b.uSlice0Bytes = m_uCapOfBytes - uBeginIndex;
+        b.szSlice0 = m_szCapOfBytes - szBeginIndex;
         b.pSlice1 = m_pData;
-        b.uSlice1Bytes = uBytes - b.uSlice0Bytes;
+        b.szSlice1 = szBytes - b.szSlice0;
     }
     return b;
 }
@@ -94,18 +96,20 @@ MultiWriteRingBuffer::Block MultiWriteRingBuffer::Peek() const
 bool MultiWriteRingBuffer::Readed(const Block& b)
 {
     // Single thread
-    const uint32_t uBytes = b.uSlice0Bytes + b.uSlice1Bytes;
-    if (uBytes > m_uDataOfBytes.load())
+    const size_t szBytes = b.szSlice0 + b.szSlice1;
+    if (szBytes > m_uDataOfBytes.load())
     {
         return false;
     }
     auto uBeginIndex = m_uBeginIndex.load();
-    uBeginIndex += uBytes;
-    while (uBeginIndex >= m_uCapOfBytes)
+    uBeginIndex += szBytes;
+    while (uBeginIndex >= m_szCapOfBytes)
     {
-        uBeginIndex -= m_uCapOfBytes;
+        uBeginIndex -= m_szCapOfBytes;
     }
-    m_uDataOfBytes -= uBytes;
+    m_uDataOfBytes -= szBytes;
     m_uBeginIndex = uBeginIndex;
     return true;
 }
+
+}  // namespace tracejj

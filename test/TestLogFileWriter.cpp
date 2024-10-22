@@ -3,11 +3,10 @@
 #include <string_view>
 #include <fstream>
 #include "log/LogFileWriter.h"
-#include "system/Path.h"
 
 TEST(LogFileWriter, Message)
 {
-    auto pathLog = GetLogsPath();
+    auto pathLog = GetDefaultLogPath();
     pathLog.append("log");
     std::error_code err;
     for (auto& entry : fs::directory_iterator(pathLog, err))

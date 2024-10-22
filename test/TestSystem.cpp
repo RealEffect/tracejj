@@ -2,28 +2,30 @@
 #include <future>
 #include "trace++/System.h"
 
+using namespace tracejj;
+
 TEST(Sytem, CurrentThreadNumber)
 {
-    ASSERT_GT(tracejj::CurrentThreadNumber(), 0U);
-    ASSERT_EQ(tracejj::CurrentThreadNumber(), tracejj::CurrentThreadNumber());
+    ASSERT_GT(CurrentThreadNumber(), 0U);
+    ASSERT_EQ(CurrentThreadNumber(), CurrentThreadNumber());
     const auto f = std::async(
-        [number = tracejj::CurrentThreadNumber()]()
+        [number = CurrentThreadNumber()]()
         {
-            ASSERT_NE(number, tracejj::CurrentThreadNumber());
-            ASSERT_EQ(tracejj::CurrentThreadNumber(), tracejj::CurrentThreadNumber());
+            ASSERT_NE(number, CurrentThreadNumber());
+            ASSERT_EQ(CurrentThreadNumber(), CurrentThreadNumber());
         });
     f.wait();
 }
 
 TEST(Sytem, CurrentProcessNumber)
 {
-    ASSERT_GT(tracejj::CurrentProcessNumber(), 0U);
-    ASSERT_EQ(tracejj::CurrentProcessNumber(), tracejj::CurrentProcessNumber());
+    ASSERT_GT(CurrentProcessNumber(), 0U);
+    ASSERT_EQ(CurrentProcessNumber(), CurrentProcessNumber());
     const auto f = std::async(
-        [number = tracejj::CurrentProcessNumber()]()
+        [number = CurrentProcessNumber()]()
         {
-            ASSERT_EQ(number, tracejj::CurrentProcessNumber());
-            ASSERT_EQ(tracejj::CurrentProcessNumber(), tracejj::CurrentProcessNumber());
+            ASSERT_EQ(number, CurrentProcessNumber());
+            ASSERT_EQ(CurrentProcessNumber(), CurrentProcessNumber());
         });
     f.wait();
 }

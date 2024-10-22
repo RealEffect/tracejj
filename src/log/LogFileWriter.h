@@ -1,30 +1,27 @@
 ﻿#pragma once
 
-#include "trace++/LogWriter.h"
-#include "buffer/MultiWriteRingBuffer.h"
-#include <string>
 #include <thread>
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
+#include "trace++/LogWriter.h"
+#include "buffer/MultiWriteRingBuffer.h"
+#include "platform/Path.h"
 
-#ifdef _WIN32
-typedef std::wstring path_string;
-#else
-typedef std::string path_string;
-#endif
-
+namespace tracejj
+{
 class LogFileWriter final : public LogWriter
 {
+private:
     struct LogBuffer
     {
         MultiWriteRingBuffer data;
-        std::atomic_uint32_t loss;
+        std::atomic<uint32_t> loss;
         uint32_t flags;
         LogBuffer()
-            : data(32U * 1024U)
-            , loss(0U)
-            , flags(0U)
+            : data(32ull * 1024ull)
+            , loss(0u)
+            , flags(0u)
         {
         }
     };
@@ -47,7 +44,7 @@ private:
     void Start(const path_string& strDir);
     void Stop();
     int OpenLogFile(const path_string& strDir);
-    void LoopWrite(path_string strDir);
+    void LoopWrite(const path_string& strDir);
     void PruneLogStorage(bool& bBreak, const path_string& strDir);
 
 private:
@@ -59,3 +56,4 @@ private:
     std::mutex m_mtxStatus;
     std::condition_variable m_cvWriteEvent;
 };
+}  // namespace tracejj
