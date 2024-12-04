@@ -142,14 +142,14 @@ int LogFileWriter::OpenLogFile(const path_string& strDir)
         fs::path pathLogFile(strDir);
         if (fs::is_directory(pathLogFile) || fs::create_directories(pathLogFile))
         {
-            const auto tick = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now());
+            const auto now = fmt::localtime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
             // log file name: <base name>.<system time>[#<conflict number>].<pid>.log
             // conflict number: 1 - 512
             // 日志文件名包含创建时间和进程号，参考glog，创建时间便于通过文件名筛选时间段，进程号
             // 可以兼容多进程，同时防止日志文件名冲突。
             // 加入文件名防冲突编号，1-512，兼容在短时间内（1秒内）大量日志输出导致文件滚动引起的文
             // 件名冲突。
-            pathLogFile.append(fmt::format("{:%Y%m%d-%H%M%S}.{}.log", tick, CurrentProcessNumber()));
+            pathLogFile.append(fmt::format("{}@{:%Y%m%d-%H%M%S}.log", CurrentProcessNumber(), now));
             int nFileHandle = -1;
             for (int i = 1; i <= 512 && m_bLogging; ++i)
             {
@@ -161,7 +161,7 @@ int LogFileWriter::OpenLogFile(const path_string& strDir)
 #endif
                 if (err == EEXIST)
                 {
-                    pathLogFile.replace_filename(fmt::format("{:%Y%m%d-%H%M%S}#{}.{}.log", tick, i, CurrentProcessNumber()));
+                    pathLogFile.replace_filename(fmt::format("{}@{:%Y%m%d-%H%M%S}#{}.log", CurrentProcessNumber(), now, i));
                 }
                 else
                 {

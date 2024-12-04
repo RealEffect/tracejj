@@ -128,8 +128,9 @@ void LoggerImpl::MessageNow(LogLevel level, uint32_t uMod, const char* strMessag
         const auto tickNow = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count() / double(std::micro::den);
         const auto timeNow = std::chrono::system_clock::now();
         const auto timeNowSecond = std::chrono::time_point_cast<std::chrono::seconds>(timeNow);
-        const auto timeNowSubsecond = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow.time_since_epoch()).count() % std::milli::den;
-        const auto strFormat = fmt::format("{}.{:03} [{}@{:.6f}]<{}>: {}", timeNowSecond, timeNowSubsecond, CurrentThreadNumber(), tickNow, level, fmt::string_view(strMessage, szMessage));
+        const auto timeNowSubsecond = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow - timeNowSecond);
+        const auto tmNow = fmt::localtime(std::chrono::system_clock::to_time_t(timeNowSecond));
+        const auto strFormat = fmt::format("{:%F %T}.{:03} [{}@{:.6f}]<{}>: {}", tmNow, timeNowSubsecond.count(), CurrentThreadNumber(), tickNow, level, fmt::string_view(strMessage, szMessage));
         Write(level, uMod, strFormat.c_str(), strFormat.size());
         Print(level, strFormat.c_str(), strFormat.size());
     }
