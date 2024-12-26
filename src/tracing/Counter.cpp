@@ -134,7 +134,7 @@ P1SCounter::~P1SCounter()
 void P1SCounter::Pace(uint64_t uInc, uint32_t uLogMod)
 {
     const auto now = steady_clock::now();
-    if (m_uTotal == 0ull)
+    if (m_tpStart == steady_clock::time_point())
     {
         m_tpStart = now;
         m_tpTrace = now;
