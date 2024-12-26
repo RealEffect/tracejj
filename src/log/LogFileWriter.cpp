@@ -149,7 +149,7 @@ int LogFileWriter::OpenLogFile(const path_string& strDir)
             // 可以兼容多进程，同时防止日志文件名冲突。
             // 加入文件名防冲突编号，1-512，兼容在短时间内（1秒内）大量日志输出导致文件滚动引起的文
             // 件名冲突。
-            pathLogFile.append(fmt::format("{}@{:%Y%m%d-%H%M%S}.log", CurrentProcessNumber(), now));
+            pathLogFile.append(fmt::format("{}_{:%Y%m%d-%H%M%S}.log", CurrentProcessNumber(), now));
             int nFileHandle = -1;
             for (int i = 1; i <= 512 && m_bLogging; ++i)
             {
