@@ -180,6 +180,7 @@ int LogFileWriter::OpenLogFile(const path_string& strDir)
 
 void LogFileWriter::LoopWrite(const path_string& strDir)
 {
+    SetThreadAlias("LogStorage");
     bool bPruning = false;
     bool bEof = false;
     std::future<void> ftPrune;
