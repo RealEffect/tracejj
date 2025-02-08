@@ -69,4 +69,14 @@ int CurrentProcessNumber()
     return s_nProcessNumber;
 }
 
+void SetThreadAlias(const char* name)
+{
+    if (name != nullptr)
+    {
+#ifdef __linux__
+        pthread_setname_np(pthread_self(), name);
+#endif
+    }
+}
+
 }  // namespace tracejj
