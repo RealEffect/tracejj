@@ -85,7 +85,7 @@ namespace tracejj
 class TrackFIFO
 {
 public:
-    TrackFIFO(const std::string&) = default;
+    TrackFIFO(const std::string&) {}
     ~TrackFIFO() = default;
 
 public:
