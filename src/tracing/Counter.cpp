@@ -33,10 +33,10 @@ public:
             pathFIFO /= strName;
             m_strPath = pathFIFO.native();
             ::mkfifo(m_strPath.c_str(), 0644);
-            m_fp = ::open(m_strPath.c_str(), O_RDONLY | O_NONBLOCK);
+            m_fp = ::open(m_strPath.c_str(), O_RDONLY | O_CLOEXEC | O_NONBLOCK);
             if (m_fp >= 0)
             {
-                m_fd = ::open(m_strPath.c_str(), O_WRONLY | O_NONBLOCK);
+                m_fd = ::open(m_strPath.c_str(), O_WRONLY | O_CLOEXEC | O_NONBLOCK);
             }
         }
     }
@@ -61,9 +61,11 @@ public:
         {
             if (::write(m_fd, strMsg.c_str(), strMsg.size()) < 0 && errno == EAGAIN)
             {
-                char buffer[2048];
-                ::read(m_fp, buffer, sizeof(buffer));
-                ::write(m_fd, strMsg.c_str(), strMsg.size());
+                char buffer[1024];
+                const ssize_t r = ::read(m_fp, buffer, sizeof(buffer));
+                (void)r;
+                const ssize_t w = ::write(m_fd, strMsg.c_str(), strMsg.size());
+                (void)w;
             }
         }
         return *this;
