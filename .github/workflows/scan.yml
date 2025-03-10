@@ -1,20 +1,27 @@
-name: static code scan
+name: code scan
 
 on:
   pull_request:
     branches: [ "main" ]
 
 jobs:
-  scan_linux:
-    name: Scan On Linux
+  check_pull_request:
+    name: Check format
     runs-on: ubuntu-latest
     steps:
-      - name: Official SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v5.0.0
+      - uses: actions/checkout@v4
 
-  scan_windows:
-    name: Scan On Windows
-    runs-on: windows-latest
-    steps:
-      - name: Official SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v5.0.0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - run: pip install chardet
+
+      - run: sudo apt-get install clang-format-14
+        
+      - run: ./tools/format
+
+      - run: git diff --exit-code ./include
+      - run: git diff --exit-code ./src
+      - run: git diff --exit-code ./test
