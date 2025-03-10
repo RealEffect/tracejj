@@ -1,9 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-python3 $pwd/tools/encode_conv.py $pwd/include/
-python3 $pwd/tools/encode_conv.py $pwd/src/
-python3 $pwd/tools/encode_conv.py $pwd/test/
+python3 $(pwd)/tools/format_file.py $(pwd)/include/
+python3 $(pwd)/tools/format_file.py $(pwd)/src/
+python3 $(pwd)/tools/format_file.py $(pwd)/test/
 
-python3 $pwd/tools/format_code.py $pwd/include/
-python3 $pwd/tools/format_code.py $pwd/src/
-python3 $pwd/tools/format_code.py $pwd/test/
+python3 $(pwd)/tools/format_code.py $(pwd)/include/
+python3 $(pwd)/tools/format_code.py $(pwd)/src/
+python3 $(pwd)/tools/format_code.py $(pwd)/test/
