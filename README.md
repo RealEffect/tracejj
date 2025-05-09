@@ -1,4 +1,5 @@
 # Trace++
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/RealEffect/tracejj)
 
 C++ 实现的日志库，提供C++接口。
 
